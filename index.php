@@ -2179,6 +2179,7 @@ function is_binary($file){
     if (!is_file($file)) return false;
     $mime = mime_content_type($file);
     fb_log($file,$mime);
+    if (strpos($mime,'application/json') === false) return false;
     if (strpos($mime,'text') === false && strpos($mime,'x-empty') === false) return true;
     return false;
 }
@@ -2187,6 +2188,7 @@ function is_textfile($file){
     $mime = mime_content_type($file);
     fb_log($file,$mime);
     if (strpos($mime,'text') === 0 || strpos($mime,'x-empty') !== false) return true;
+    if (strpos($mime,'application/json') === 0 ) return true;
     return false;
 }
 function dir_list_form() {
