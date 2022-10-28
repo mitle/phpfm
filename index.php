@@ -1314,10 +1314,14 @@ function replace_double($sub,$str){
     return $out;
 }
 function remove_special_chars($str){
-    $str = trim($str);
-    $str = strtr($str,array("¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ!@#%&*()[]{}+=?",
-                            "YuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy_______________"));
+    //$str = trim($str);
+    //$str = strtr($str,"¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ!@#%&*()[]{}+=?",
+    //                  "YuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy_______________");
+    $str = strtr($str,":;*/|`\"'\\\0",
+                      "__________");
+    $str = preg_replace('/^-/', '_', $str);
     $str = str_replace("..","",str_replace("/","",str_replace("\\","",str_replace("\$","",$str))));
+    
     return $str;
 }
 function array_csort() {
