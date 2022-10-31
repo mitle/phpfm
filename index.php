@@ -808,16 +808,33 @@ function system_get_total_size($path){
             $total_size = 0;
             $path = realpath($path);
             if(is_dir($path) && is_readable($path)){
-                foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::LEAVES_ONLY,  RecursiveIteratorIterator::CATCH_GET_CHILD) as $object){
-                    if ( !is_link($object) ){
-                        $total_size += $object->getSize();
-                    }
-                }
+                $total_size = foldersize($path);
             }
         }
     }
     if ($total_size === false) fb_log('system_get_total_size("'.$path.'") = FALSE');
     else fb_log('system_get_total_size("'.$path.'") = '.format_size($total_size));
+    return $total_size;
+}
+function foldersize($path, $max_depth = 40) {
+    $total_size = 0;
+    if ($max_depth <= 0) return 0;
+    
+    $files = scandir($path);
+    $cleanPath = rtrim($path, '/'). '/';
+    
+    foreach($files as $t) {
+        if ($t<>"." && $t<>"..") {
+            $currentFile = $cleanPath . $t;
+            if (is_dir($currentFile)) {
+                $total_size += foldersize($currentFile, $max_depth - 1);
+            }
+            else {
+                $total_size += filesize($currentFile);
+            }
+        }   
+    }
+
     return $total_size;
 }
 function php_get_total_size($path) {
@@ -1317,8 +1334,8 @@ function remove_special_chars($str){
     //$str = trim($str);
     //$str = strtr($str,"¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ!@#%&*()[]{}+=?",
     //                  "YuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy_______________");
-    $str = strtr($str,":;*/|`\"'\\\0",
-                      "__________");
+    $str = strtr($str,":;*/|`<>&%\"'\\\0",
+                      "______________");
     $str = preg_replace('/^-/', '_', $str);
     $str = str_replace("..","",str_replace("/","",str_replace("\\","",str_replace("\$","",$str))));
     
@@ -2181,18 +2198,18 @@ function is_binary($file){
     //https://stackoverflow.com/questions/1765311/how-to-view-files-in-binary-from-bash
     //http://php.net/manual/pt_BR/function.bin2hex.php
     if (!is_file($file)) return false;
-    $mime = mime_content_type($file);
-    fb_log($file,$mime);
-    if (strpos($mime,'application/json') === 0) return false;
-    if (strpos($mime,'text') === false && strpos($mime,'x-empty') === false) return true;
-    return false;
+    return ! is_textfile($file);
 }
 function is_textfile($file){
     if (!is_file($file)) return false;
     $mime = mime_content_type($file);
     fb_log($file,$mime);
     if (strpos($mime,'text') === 0 || strpos($mime,'x-empty') !== false) return true;
-    if (strpos($mime,'application/json') === 0 ) return true;
+    
+    $text_mime_types = array('application/json', 'application/x-wine-extension-ini');
+    foreach ($text_mime_types as $needle) {
+        if (strpos($mime, $needle) === 0) return true;
+    }
     return false;
 }
 function dir_list_form() {
